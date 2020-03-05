@@ -3,52 +3,38 @@ package server;
 import java.util.ArrayList;
 import java.util.List;
 
-public class SimpleAuthService implements AuthService {
+public class SimpleAuthService implements AuthService
+{
+    private boolean dbConnected;
 
-    private class UserData {
-        String login;
-        String password;
-        String nickname;
-
-        public UserData(String login, String password, String nickname) {
-            this.login = login;
-            this.password = password;
-            this.nickname = nickname;
-        }
-    }
-
-    private List<UserData> users;
-
-    public SimpleAuthService() {
-        users = new ArrayList<>();
-        for (int i = 1; i <= 10; i++) {
-            users.add(new UserData("login" + i, "pass" + i, "nick" + i));
-        }
+    public SimpleAuthService()
+    {
+        dbConnected = DB.open();
+        if ( dbConnected )
+            System.out.println( "База данных подключена." );
+        else
+            System.out.println( "Ошибка подключени к базе данных!" );
     }
 
     @Override
-    public String getNicknameByLoginAndPassword(String login, String password) {
-        for (UserData o : users) {
-            if (o.login.equals(login) && o.password.equals(password)) {
-                return o.nickname;
-            }
-        }
-        return null;
+    public String getNicknameByLoginAndPassword(String login, String password)
+    {
+        if ( dbConnected )
+            return DB.querySingleResultString ( "SELECT nickname FROM users WHERE login=" + login + " AND password=" + password );
+        else
+            return null;
     }
 
     @Override
-    public boolean registration(String login, String password, String nickname) {
-        for (UserData o : users) {
-            if (o.login.equals(login)) {
-                return false;
-            }
-        }
-
+    public boolean registration(String login, String password, String nickname)
+    {
         if (password.trim().equals("")) {
             return false;
         }
 
-        users.add(new UserData(login, password, nickname));
-        return true;
+        if ( dbConnected )
+            return DB.execute ( "INSERT INTO users ( login, password, nickname ) VALUES ( " + login + ", " + password + ", " + nickname + " )" );
+        else
+            return false;
     }
 }
