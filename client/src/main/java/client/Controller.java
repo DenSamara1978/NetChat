@@ -18,13 +18,12 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.net.Socket;
 import java.net.SocketException;
 import java.net.URL;
 import java.util.ResourceBundle;
+import java.util.Vector;
 
 public class Controller implements Initializable {
     @FXML
@@ -51,8 +50,11 @@ public class Controller implements Initializable {
 
     private boolean authenticated;
     private String nickname;
+    private String login = "";
 
     Stage regStage;
+
+    private BufferedWriter file = null;
 
     public void setAuthenticated(boolean authenticated) {
         this.authenticated = authenticated;
@@ -62,10 +64,52 @@ public class Controller implements Initializable {
         msgPanel.setManaged(authenticated);
         clientList.setVisible(authenticated);
         clientList.setManaged(authenticated);
+        textArea.clear();
         if (!authenticated) {
             nickname = "";
+            if ( file != null )
+            {
+                try {
+                    file.close ();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                file = null;
+            }
         }
-        textArea.clear();
+        else
+        {
+            String filename = "history_" + login + ".txt";
+            BufferedReader reader = null;
+            try {
+                 reader = new BufferedReader ( new FileReader ( filename ));
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            }
+
+            String str = null;
+            Vector<String> arr = new Vector<String> ();
+            while (true) {
+                try {
+                    if ((( str = reader.readLine ()) == null)) break;
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                arr.add ( str + "\n" );
+            }
+
+            int start = ( arr.size () < 100 ) ? 0 : arr.size () - 100;
+            for ( int i = start; i < arr.size(); ++i )
+            {
+                textArea.appendText ( arr.get ( i ));
+            }
+
+            try {
+                file = new BufferedWriter ( new FileWriter ( filename, true ));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
         setTitle("chat 2020");
     }
 
@@ -119,6 +163,7 @@ public class Controller implements Initializable {
                         String str = in.readUTF();
                         if (str.startsWith("/")) {
                             if (str.equals("/end")) {
+                                login = "";
                                 setAuthenticated(false);
                                 break;
                             }
@@ -138,6 +183,8 @@ public class Controller implements Initializable {
 
                         } else {
                             textArea.appendText(str + "\n");
+                            file.append ( str + "\n" );
+                            file.flush ();
                         }
                     }
                 } catch (SocketException e) {
@@ -179,7 +226,8 @@ public class Controller implements Initializable {
         }
 
         try {
-            out.writeUTF("/auth " + loginField.getText() + " " + passwordField.getText());
+            login = loginField.getText();
+            out.writeUTF("/auth " + login + " " + passwordField.getText());
 //            loginField.clear();
             passwordField.clear();
         } catch (IOException e) {
