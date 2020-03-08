@@ -131,6 +131,10 @@ public class Controller implements Initializable {
                                     }
                                 });
                             }
+                            if (str.startsWith("/yournickis ")) {
+                                nickname = str.split(" ")[1];
+                                setTitle("chat 2020 : " + nickname);
+                            }
 
                         } else {
                             textArea.appendText(str + "\n");
