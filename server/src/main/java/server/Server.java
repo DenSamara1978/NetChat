@@ -8,10 +8,13 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Scanner;
 import java.util.Vector;
+import java.util.logging.*;
 
 public class Server {
     private Vector<ClientHandler> clients;
     private AuthService authService;
+
+    private static final Logger logger = Logger.getLogger ( "" );
 
     public AuthService getAuthService() {
         return authService;
@@ -29,12 +32,21 @@ public class Server {
         Socket socket = null;
 
         try {
+            Handler handler = new FileHandler ( "netchat.log", true ) ;
+            handler.setFormatter ( new SimpleFormatter());
+            logger.addHandler ( handler );
+            logger.setUseParentHandlers ( true ); // Для отладочных целей
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        try {
             server = new ServerSocket(8189);
-            System.out.println("Сервер запустился");
+            logger.info ("Сервер запустился");
 
             while (true) {
                 socket = server.accept();
-                System.out.println("Клиент подключился");
+                logger.info ( "Клиент подключился");
                 new ClientHandler(socket, this);
             }
 
@@ -48,6 +60,11 @@ public class Server {
                 e.printStackTrace();
             }
         }
+    }
+
+    public static void logInfo ( String message )
+    {
+        logger.info( message );
     }
 
     public void broadcastMsg(String nick, String msg) {
