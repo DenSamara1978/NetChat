@@ -1,0 +1,10 @@
+мар 19, 2020 11:26:17 PM java.util.logging.LogManager$RootLogger log
+INFO: Сервер запустился
+мар 19, 2020 11:34:20 PM java.util.logging.LogManager$RootLogger log
+INFO: Сервер запустился
+мар 19, 2020 11:35:16 PM java.util.logging.LogManager$RootLogger log
+INFO: Клиент подключился
+мар 19, 2020 11:35:16 PM java.util.logging.LogManager$RootLogger log
+INFO: Клиент qwerty авторизовался.
+мар 19, 2020 11:35:32 PM java.util.logging.LogManager$RootLogger log
+INFO: Клиент отключился

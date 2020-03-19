@@ -21,18 +21,6 @@ public class ClientHandler {
             in = new DataInputStream(socket.getInputStream());
             out = new DataOutputStream(socket.getOutputStream());
 
-            /*
-            Не вижу смысла в этом контексте применять какой либо ExecutorService.
-            Причина в том, что потоки открываются на все время подключения каждого клиента и живут все время, пока клиент имеет соединение с нами.
-            Количество клиентов теореически неограничено, поэтому точного количества необходимых потоков в пуле заранее неизвестно.
-            Более того, время жизни потока очень значительное ( так видится, что от минут до часов ) и значит накладые расходы по открытию/закрытию
-                потоков будут исчезающие малыми, и преимущества ExecutorService здесь не раскроются.
-            Иным бы образом дело обстояло, если бы у нас клиенты часто и на короткое время открывали сетевые соединения, тогда возможно бы и пригодился
-                кэширующий ExecutorService.
-
-            На основании выше описанного я не решился кромсать работающий код :)
-             */
-
             new Thread(() -> {
                 try {
                     socket.setSoTimeout(120000);
@@ -68,7 +56,7 @@ public class ClientHandler {
                                     sendMsg("/authok " + newNick);
                                     nick = newNick;
                                     server.subscribe(this);
-                                    System.out.println("Клиент " + nick + " подключился");
+                                    Server.logInfo ( "Клиент " + nick + " авторизовался." );
                                     socket.setSoTimeout(0);
                                     break;
                                 } else {
@@ -105,6 +93,7 @@ public class ClientHandler {
                                 if (server.getAuthService().changeNick(this.nick, token[1])) {
                                     sendMsg("/yournickis " + token[1]);
                                     sendMsg("Ваш ник изменен на " + token[1]);
+                                    Server.logInfo ( "Пользователь " + this.login + " изменил свой ник " + this.nick + " на " + token [1] + "." );
                                     this.nick = token[1];
                                     server.broadcastClientList();
                                 } else {
@@ -118,9 +107,9 @@ public class ClientHandler {
 
                     }
                 }catch (SocketTimeoutException e){
-                    System.out.println("Клиент отключился по таймауту");
+                    Server.logInfo ("Клиент отключился по таймауту.");
                 } catch (RuntimeException e) {
-                    System.out.println("сами вызвали исключение.");
+//                    Server.logInfo ("Клиент отключился."); Все равно отработает в finally
                 } catch (IOException e) {
                     e.printStackTrace();
                 } finally {
@@ -140,7 +129,7 @@ public class ClientHandler {
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
-                    System.out.println("Клиент отключился");
+                    Server.logInfo ("Клиент " + this.login + " отключился");
                 }
             }).start();
 
